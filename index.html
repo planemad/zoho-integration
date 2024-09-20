@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoho CRM Leads Viewer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        #leadsList {
+            margin-top: 20px;
+        }
+        .lead {
+            background-color: #f4f4f4;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        #debugInfo {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Zoho CRM Leads</h1>
+    <button onclick="getLeads()">Fetch Leads</button>
+    <div id="leadsList"></div>
+    <div id="debugInfo"></div>
+
+    <script>
+        const clientId = '1000.GYHPIROR2HLU8YGD37HM9XWS5E8RMV';
+        const clientSecret = 'ca34f350db587da0c8eee64abacbf5c3bbe2e2bfc5';
+        const redirectUri = 'https://jsfiddle.net/planemad/o6cp2jmz/';
+        const scope = 'ZohoCRM.modules.leads.READ';
+
+        function getLeads() {
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) {
+                authenticate();
+            } else {
+                fetchLeads(accessToken);
+            }
+        }
+
+        function authenticate() {
+            const authUrl = `https://accounts.zoho.com/oauth/v2/auth?scope=${encodeURIComponent(scope)}&client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&access_type=offline`;
+            window.open(authUrl, '_blank');
+        }
+
+        function fetchLeads(accessToken) {
+            axios.get('https://www.zohoapis.com/crm/v2/Leads', {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            })
+            .then(response => {
+                const leads = response.data.data;
+                console.log(leads)
+                displayLeads(leads);
+            })
+            .catch(error => {
+                console.error('Error fetching leads:', error);
+                if (error.response && error.response.status === 401) {
+                    localStorage.removeItem('accessToken');
+                    authenticate();
+                }
+            });
+        }
+
+        function displayLeads(leads) {
+            const leadsListElement = document.getElementById('leadsList');
+            leadsListElement.innerHTML = '';
+            leads.forEach(lead => {
+                const leadElement = document.createElement('div');
+                leadElement.className = 'lead';
+                leadElement.innerHTML = `
+                    <h3>${lead.First_Name} ${lead.Last_Name}</h3>
+                    <p>Email: ${lead.Email}</p>
+                    <p>Company: ${lead.Company}</p>
+                `;
+                leadsListElement.appendChild(leadElement);
+            });
+        }
+
+        function displayDebugInfo(message) {
+            const debugInfoElement = document.getElementById('debugInfo');
+            debugInfoElement.innerHTML += `<p>${message}</p>`;
+        }
+
+        // Check for authorization code in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        if (code) {
+            displayDebugInfo(`Authorization code received: ${code}`);
+            // Exchange code for access token
+            axios.post('https://accounts.zoho.com/oauth/v2/token', null, {
+                params: {
+                    code: code,
+                    client_id: clientId,
+                    client_secret: clientSecret,
+                    redirect_uri: redirectUri,
+                    grant_type: 'authorization_code'
+                }
+            })
+            .then(response => {
+                const accessToken = response.data.access_token;
+                localStorage.setItem('accessToken', accessToken);
+                displayDebugInfo(`Access token received and stored`);
+                fetchLeads(accessToken);
+            })
+            .catch(error => {
+                console.error('Error exchanging code for token:', error);
+                displayDebugInfo(`Error exchanging code for token: ${error.message}`);
+                if (error.response) {
+                    displayDebugInfo(`Error response: ${JSON.stringify(error.response.data)}`);
+                }
+            });
+        } else {
+            displayDebugInfo('No authorization code found in URL. Please click "Fetch Leads" to start the authentication process.');
+        }
+
+        // Display current client ID for verification
+        displayDebugInfo(`Current Client ID: ${clientId}`);
+    </script>
+</body>
+</html>
