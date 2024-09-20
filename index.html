@@ -45,6 +45,8 @@
         const redirectUri = window.location.href.split('?')[0]; // Set redirectUri from the current URL
         const scope = 'ZohoCRM.modules.leads.READ';
 
+        console.log(redirectUri);
+        
         function getLeads() {
             const accessToken = localStorage.getItem('accessToken');
             if (!accessToken) {
