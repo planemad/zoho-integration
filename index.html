@@ -42,7 +42,7 @@
     <script>
         const clientId = '1000.BVX0TTGASJLNY2NO02QL1ZYT2H7CXT';
         const clientSecret = 'ea7b7d334c0de1af23dfe4aad882901887b3ba433b';
-        const redirectUri = 'http://localhost:3000';
+        const redirectUri = window.location.href.split('?')[0]; // Set redirectUri from the current URL
         const scope = 'ZohoCRM.modules.leads.READ';
 
         function getLeads() {
