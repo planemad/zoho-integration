@@ -42,7 +42,7 @@
     <script>
         const clientId = '1000.GYHPIROR2HLU8YGD37HM9XWS5E8RMV';
         const clientSecret = 'ca34f350db587da0c8eee64abacbf5c3bbe2e2bfc5';
-        const redirectUri = 'https://jsfiddle.net/planemad/o6cp2jmz/';
+        const redirectUri = 'https://planemad.github.io/zoho-integration/';
         const scope = 'ZohoCRM.modules.leads.READ';
 
         function getLeads() {
@@ -56,7 +56,7 @@
 
         function authenticate() {
             const authUrl = `https://accounts.zoho.com/oauth/v2/auth?scope=${encodeURIComponent(scope)}&client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&access_type=offline`;
-            window.open(authUrl, '_blank');
+            window.location.href = authUrl;
         }
 
         function fetchLeads(accessToken) {
