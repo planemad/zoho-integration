@@ -42,7 +42,7 @@
     <script>
         const clientId = '1000.BVX0TTGASJLNY2NO02QL1ZYT2H7CXT';
         const clientSecret = 'ea7b7d334c0de1af23dfe4aad882901887b3ba433b';
-        const redirectUri = 'https://planemad.github.io/zoho-integration/';
+        const redirectUri = 'http://localhost:3000';
         const scope = 'ZohoCRM.modules.leads.READ';
 
         function getLeads() {
@@ -67,7 +67,7 @@
             })
             .then(response => {
                 const leads = response.data.data;
-                console.log(leads)
+                console.log(leads);
                 displayLeads(leads);
             })
             .catch(error => {
@@ -81,17 +81,14 @@
 
         function displayLeads(leads) {
             const leadsListElement = document.getElementById('leadsList');
-            leadsListElement.innerHTML = '';
+            leadsListElement.innerHTML = '<h2>Lead Names:</h2>';
+            const leadsList = document.createElement('ul');
             leads.forEach(lead => {
-                const leadElement = document.createElement('div');
-                leadElement.className = 'lead';
-                leadElement.innerHTML = `
-                    <h3>${lead.First_Name} ${lead.Last_Name}</h3>
-                    <p>Email: ${lead.Email}</p>
-                    <p>Company: ${lead.Company}</p>
-                `;
-                leadsListElement.appendChild(leadElement);
+                const listItem = document.createElement('li');
+                listItem.textContent = `${lead.First_Name} ${lead.Last_Name}`;
+                leadsList.appendChild(listItem);
             });
+            leadsListElement.appendChild(leadsList);
         }
 
         function displayDebugInfo(message) {
@@ -105,13 +102,19 @@
         if (code) {
             displayDebugInfo(`Authorization code received: ${code}`);
             // Exchange code for access token
-            axios.post('https://accounts.zoho.com/oauth/v2/token', null, {
-                params: {
-                    code: code,
-                    client_id: clientId,
-                    client_secret: clientSecret,
-                    redirect_uri: redirectUri,
-                    grant_type: 'authorization_code'
+            const tokenUrl = 'https://accounts.zoho.com/oauth/v2/token';
+            const tokenData = new URLSearchParams({
+                code: code,
+                client_id: clientId,
+                client_secret: clientSecret,
+                redirect_uri: redirectUri,
+                grant_type: 'authorization_code'
+            });
+
+            // Use axios instead of fetch to handle CORS issues
+            axios.post(tokenUrl, tokenData, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
                 }
             })
             .then(response => {
@@ -123,9 +126,6 @@
             .catch(error => {
                 console.error('Error exchanging code for token:', error);
                 displayDebugInfo(`Error exchanging code for token: ${error.message}`);
-                if (error.response) {
-                    displayDebugInfo(`Error response: ${JSON.stringify(error.response.data)}`);
-                }
             });
         } else {
             displayDebugInfo('No authorization code found in URL. Please click "Fetch Leads" to start the authentication process.');
